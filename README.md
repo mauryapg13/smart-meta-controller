@@ -81,16 +81,18 @@ To keep the Git repository lightweight, the massive DistilBERT model weights are
 1. Download the pre-trained DistilBERT weights from [Insert Download Link Here].
 2. Extract the downloaded folder and place it in the project root so that the path looks exactly like this: `models/distilbert-prompt-classifier/`.
 
-### 3. Configure Your Custom LLM API (Groq by Default)
+### 3. Configure Your API Keys
 
 > **Note:** To demonstrate and test this project, the **Groq API** was used to power the agents (`llama-3.1-8b-instant` for Light, `llama-3.3-70b-versatile` for Deep). However, you can easily configure this to use your own preferred API (e.g., OpenAI, Anthropic, local Ollama).
 
-**Steps to configure your own APIs:**
-1. Open `llm_backend/main.py`.
-2. Locate the API client initialization. Currently, it uses `from groq import Groq` and initializes `client = Groq(api_key=...)`.
-3. Replace the `Groq` client with your preferred provider's SDK (e.g., `from openai import OpenAI`).
-4. Update the `.env` file in the `llm_backend` directory with your new API Key.
-5. In the `@app.post("/light")` and `@app.post("/heavy")` routes, change the model names (e.g., `"gpt-4o-mini"` for Light, `"gpt-4o"` for Heavy) and adjust the API call syntax to match your provider.
+**Step-by-step API Setup:**
+1. Navigate to the `llm_backend` directory.
+2. Duplicate the `.env.example` file and rename it to `.env`:
+   ```bash
+   cp llm_backend/.env.example llm_backend/.env
+   ```
+3. Open your new `.env` file and paste your actual API Key (e.g., your Groq API Key).
+4. *(Optional)* If you want to use a provider other than Groq, open `llm_backend/main.py`, replace the Groq SDK with your provider's SDK (e.g., OpenAI), and update the model strings in the `/light` and `/heavy` routes.
 
 ### 4. Start the Servers
 
