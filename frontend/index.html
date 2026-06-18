@@ -1,359 +1,633 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Prompt Router Dashboard</title>
+    <title>Smart Prompt Router - Terminal</title>
     <style>
-        :root {
-            --bg-color: #f0f2f5;
-            --text-color: #333;
-            --container-bg: white;
-            --border-color: #e0e0e0;
-            
-            --header-color: #1c1e21;
-            --placeholder-color: #888;
-            --table-header-bg: #f8f9fa;
-            --table-border-color: #ddd;
-            --button-bg: #1877f2;
-            --button-hover-bg: #166fe5;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap');
 
-        body.dark-mode {
-            --bg-color: #1c1e21;
-            --text-color: #e4e6eb;
-            --container-bg: #242526;
-            --border-color: #3a3b3c;
-            --header-color: #e4e6eb;
-            --placeholder-color: #b0b3b8;
-            --table-header-bg: #3a3b3c;
-            --table-border-color: #444;
-            --button-bg: #3a3b3c;
-            --button-hover-bg: #4f5051;
+        :root {
+            --bg-color: #0d0d0d;
+            --text-color: #e0e0e0;
+            --chat-bg-user: #141414;
+            --chat-bg-ai: #0d0d0d;
+            --border-color: #333333;
+            --input-bg: #141414;
+            --input-border: #444444;
+            /* User color palette */
+            --color-1: #473472;
+            /* Deep purple */
+            --color-2: #53629E;
+            /* Muted blue */
+            --color-3: #87BAC3;
+            /* Cyan/blue */
+            --color-4: #D6F4ED;
+            /* Pale mint */
+
+            --badge-light: rgba(214, 244, 237, 0.1);
+            --badge-light-text: var(--color-4);
+            --badge-light-border: var(--color-4);
+
+            --badge-heavy: rgba(83, 98, 158, 0.1);
+            --badge-heavy-text: var(--color-3);
+            --badge-heavy-border: var(--color-3);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Fira Code', 'Courier New', monospace;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 1rem;
-            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
 
-        .container {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background: var(--container-bg);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: background-color 0.3s;
-        }
-
-        h1, h2 {
-            text-align: center;
-            color: var(--header-color);
-        }
-
-        .theme-switcher {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-        }
-
-        #theme-toggle {
-            background: var(--button-bg);
-            color: white;
-            border: none;
+        .window-chrome {
+            background: #1a1a1a;
+            border-bottom: 1px solid var(--border-color);
             padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        #theme-toggle:hover {
-            background: var(--button-hover-bg);
+        .mac-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
         }
 
-        .input-section {
-            margin-bottom: 2rem;
+        .mac-btn.close {
+            background: #ff5f56;
+        }
+
+        .mac-btn.min {
+            background: #ffbd2e;
+        }
+
+        .mac-btn.max {
+            background: #27c93f;
+        }
+
+        .chrome-title {
+            margin-left: 1rem;
+            font-size: 0.85rem;
+            color: #888;
+            letter-spacing: 1px;
+        }
+
+        .chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 2rem;
+            background-image: radial-gradient(circle at 50% 0%, rgba(83, 98, 158, 0.05), transparent 50%);
+        }
+
+        .message {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .message.user {
+            background-color: var(--chat-bg-user);
+        }
+
+        .message.ai {
+            background-color: var(--chat-bg-ai);
+        }
+
+        .message-content {
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .role {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            color: #fff;
+        }
+
+        .role.user-role {
+            color: var(--color-4);
+        }
+
+        .role.ai-role {
+            color: var(--color-3);
+        }
+
+        .role::before {
+            content: '❯';
+            margin-right: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .xai-panel {
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.8rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            border-left-width: 3px;
+            border-left-style: solid;
+            transition: all 0.3s ease;
+        }
+
+        .xai-panel.theme-light {
+            border-left-color: #4f7961;
+            background: linear-gradient(to right, rgba(79, 121, 97, 0.1), rgba(0, 0, 0, 0.3));
+        }
+
+        .xai-panel.theme-light .xai-label {
+            color: #8fb39c;
+        }
+
+        .xai-panel.theme-light .xai-value {
+            color: #b3d9c1;
+        }
+
+        .xai-panel.theme-heavy {
+            border-left-color: #8a4b4b;
+            background: linear-gradient(to right, rgba(138, 75, 75, 0.1), rgba(0, 0, 0, 0.3));
+        }
+
+        .xai-panel.theme-heavy .xai-label {
+            color: #cc8989;
+        }
+
+        .xai-panel.theme-heavy .xai-value {
+            color: #e6a8a8;
+        }
+
+        .xai-panel.theme-escalated {
+            border-left-color: #8c7b46;
+            background: linear-gradient(to right, rgba(140, 123, 70, 0.1), rgba(0, 0, 0, 0.3));
+        }
+
+        .xai-panel.theme-escalated .xai-label {
+            color: #c4b483;
+        }
+
+        .xai-panel.theme-escalated .xai-value {
+            color: #e8dbb0;
+        }
+
+        .xai-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .xai-label {
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+            color: #777;
+            transition: color 0.3s ease;
+        }
+
+        .xai-value {
+            font-family: 'Fira Code', monospace;
+            color: #eee;
+            transition: color 0.3s ease;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.1rem 0.6rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid transparent;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+        }
+
+        .badge.light {
+            background-color: rgba(79, 121, 97, 0.1);
+            color: #b3d9c1;
+            border-color: rgba(79, 121, 97, 0.3);
+            box-shadow: 0 0 10px rgba(79, 121, 97, 0.1);
+        }
+
+        .badge.heavy {
+            background-color: rgba(138, 75, 75, 0.1);
+            color: #e6a8a8;
+            border-color: rgba(138, 75, 75, 0.3);
+            box-shadow: 0 0 10px rgba(138, 75, 75, 0.1);
+        }
+
+        .badge.escalated {
+            background-color: rgba(244, 208, 63, 0.1);
+            color: #e6c229;
+            border-color: rgba(244, 208, 63, 0.3);
+            box-shadow: 0 0 10px rgba(244, 208, 63, 0.2);
+            animation: pulse-yellow 2s infinite;
+        }
+
+        @keyframes pulse-yellow {
+            0% {
+                box-shadow: 0 0 10px rgba(244, 208, 63, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(244, 208, 63, 0.5);
+            }
+
+            100% {
+                box-shadow: 0 0 10px rgba(244, 208, 63, 0.2);
+            }
+        }
+
+        .progress-bar {
+            width: 100px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .progress-fill.light {
+            background: #b3d9c1;
+            box-shadow: 0 0 10px rgba(179, 217, 193, 0.5);
+        }
+
+        .progress-fill.heavy {
+            background: #e6a8a8;
+            box-shadow: 0 0 10px rgba(230, 168, 168, 0.5);
+        }
+
+        .input-container {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            background-color: var(--bg-color);
+        }
+
+        .input-box {
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-box::before {
+            content: '➜';
+            position: absolute;
+            left: 1rem;
+            top: 1.1rem;
+            color: var(--color-4);
+            font-weight: bold;
         }
 
         textarea {
             width: 100%;
-            padding: 0.75rem;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            font-size: 1rem;
-            min-height: 120px;
-            box-sizing: border-box;
-            margin-bottom: 1rem;
-            background-color: var(--container-bg);
-            color: var(--text-color);
+            padding: 1rem 3rem 1rem 2.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--color-4);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            resize: none;
+            outline: none;
+            max-height: 200px;
+            min-height: 24px;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        button#submit-btn {
-            display: block;
-            width: 100%;
-            padding: 0.75rem;
-            border: none;
-            border-radius: 6px;
-            background-color: var(--button-bg);
-            color: white;
-            font-size: 1.1rem;
-            font-weight: bold;
+        textarea:focus {
+            border-color: var(--color-3);
+            box-shadow: 0 0 8px rgba(135, 186, 195, 0.2);
+        }
+
+        button.send {
+            position: absolute;
+            right: 0.8rem;
+            bottom: 0.8rem;
+            background: rgba(214, 244, 237, 0.1);
+            border: 1px solid rgba(214, 244, 237, 0.3);
+            border-radius: 4px;
+            color: var(--color-4);
             cursor: pointer;
-            transition: background-color 0.2s;
+            padding: 0.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
 
-        button#submit-btn:hover {
-            background-color: var(--button-hover-bg);
+        button.send:hover {
+            background: rgba(214, 244, 237, 0.2);
+            box-shadow: 0 0 8px rgba(214, 244, 237, 0.3);
         }
 
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border-left-color: #1877f2;
-            animation: spin 1s ease infinite;
-            display: none;
-            margin: 1rem auto;
+        button.send:disabled {
+            color: #555;
+            border-color: #333;
+            background: none;
+            cursor: not-allowed;
+            box-shadow: none;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .loader {
+            display: inline-flex;
+            gap: 4px;
         }
 
-        .results-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-top: 2rem;
+        .loader span {
+            width: 8px;
+            height: 16px;
+            background: var(--color-3);
+            animation: blink 1s infinite alternate;
         }
 
-        .result-card {
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+        .loader span:nth-child(2) {
+            animation-delay: 0.2s;
         }
 
-        .result-card h3 {
+        .loader span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 0.2;
+                transform: scaleY(0.8);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scaleY(1.2);
+                box-shadow: 0 0 8px var(--color-3);
+            }
+        }
+
+        pre {
+            background-color: #111;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            border: 1px solid #333;
+            border-left: 2px solid var(--color-2);
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            color: var(--color-4);
+        }
+
+        .markdown-body {
+            line-height: 1.6;
+        }
+
+        .markdown-body p {
             margin-top: 0;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.5rem;
         }
 
-        .result-card .placeholder {
-            color: var(--placeholder-color);
-            font-style: italic;
+        .markdown-body pre {
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
         }
 
-        .classification-card.light {
-            background-color: #e9f5e9;
-            border-color: #a7d7a7;
-            color: #155724;
+        .markdown-body ul,
+        .markdown-body ol {
+            margin-top: 0;
+            padding-left: 1.5rem;
         }
 
-        .classification-card.heavy {
-            background-color: #fdeeee;
-            border-color: #f5c6cb;
-            color: #721c24;
+        /* Cursor blink effect */
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1em;
+            background-color: var(--color-4);
+            vertical-align: middle;
+            animation: cursorBlink 1s step-end infinite;
         }
 
-        body.dark-mode .classification-card.light {
-            background-color: #2a3a2e;
-            border-color: #4a7c59;
-            color: #a7d7a7;
-        }
+        @keyframes cursorBlink {
 
-        body.dark-mode .classification-card.heavy {
-            background-color: #4d3134;
-            border-color: #8c5059;
-            color: #f5c6cb;
-        }
+            0%,
+            100% {
+                opacity: 1;
+            }
 
-        .classification-card p {
-            font-size: 1.1rem;
-        }
-
-        .classification-card .label {
-            font-weight: bold;
-        }
-
-        .classification-card .light .label { color: #28a745; }
-        .classification-card .heavy .label { color: #dc3545; }
-
-        #history {
-            margin-top: 3rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        th, td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid var(--table-border-color);
-        }
-
-        th {
-            background-color: var(--table-header-bg);
-        }
-
-        .history-prompt {
-            max-width: 300px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            50% {
+                opacity: 0;
+            }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
+
 <body>
-    <div class="theme-switcher">
-        <button id="theme-toggle">Theme Switcher</button>
+
+    <div class="window-chrome">
+        <div class="mac-btn close"></div>
+        <div class="mac-btn min"></div>
+        <div class="mac-btn max"></div>
+        <div class="chrome-title">metacontroller ~ zsh</div>
     </div>
-    <div class="container">
-        <h1>Multi-Agent Routing Dashboard</h1>
-        <div class="input-section">
-            <textarea id="prompt-input" placeholder="Enter your prompt..."></textarea>
-            <button id="submit-btn">Classify and Route</button>
-            <div id="spinner" class="spinner"></div>
-        </div>
 
-        <div class="results-grid">
-            <div id="classification-card" class="result-card classification-card">
-                <h3>Routing Decision</h3>
-                <p>Route: <span id="classification" class="label">N/A</span></p>
-                <p>Confidence: <span id="confidence">N/A</span></p>
-                <p>Time Taken: <span id="time-taken">N/A</span></p>
-            </div>
-            <div class="result-card">
-                <h3>Light Agent</h3>
-                <p id="light-agent-response" class="placeholder">Waiting for response...</p>
-            </div>
-            <div class="result-card">
-                <h3>Heavy Agent</h3>
-                <p id="heavy-agent-response" class="placeholder">Waiting for response...</p>
+    <div class="chat-container" id="chat-container">
+        <!-- Messages will appear here -->
+        <div class="message ai">
+            <div class="message-content">
+                <div class="role ai-role">root@meta-controller</div>
+                <div class="text markdown-body">
+                    Smart-Router Ready. <br />
+                    Awaiting input to route.
+                </div>
             </div>
         </div>
+    </div>
 
-        <div id="history">
-            <h2>Query History</h2>
-            <table id="history-table">
-                <thead>
-                    <tr>
-                        <th>Prompt</th>
-                        <th>Route</th>
-                        <th>Confidence</th>
-                        <th>Light Agent</th>
-                        <th>Heavy Agent</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
+    <div class="input-container">
+        <div class="input-box">
+            <textarea id="prompt-input" rows="1" placeholder="enter command or prompt..."></textarea>
+            <button class="send" id="send-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
         </div>
     </div>
 
     <script>
-        const themeToggle = document.getElementById('theme-toggle');
-        const body = document.body;
+        const promptInput = document.getElementById('prompt-input');
+        const sendBtn = document.getElementById('send-btn');
+        const chatContainer = document.getElementById('chat-container');
 
-        themeToggle.addEventListener('click', () => {
-            body.classList.toggle('dark-mode');
-            if (body.classList.contains('dark-mode')) {
-                localStorage.setItem('theme', 'dark');
-            } else {
-                localStorage.setItem('theme', 'light');
-            }
+        // Auto-resize textarea
+        promptInput.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
         });
 
-        // Check for saved theme in local storage
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            body.classList.add('dark-mode');
-        }
+        function createXaiPanel(metadata) {
+            const isLight = metadata.routing_decision === 'light';
+            const confPercent = (metadata.confidence * 100).toFixed(1);
+            const escalatedHtml = metadata.escalated ? '<span class="badge escalated" style="margin-left: 8px;">[ESCALATED]</span>' : '';
 
-        const submitBtn = document.getElementById('submit-btn');
-        const promptInput = document.getElementById('prompt-input');
-        const classificationCard = document.getElementById('classification-card');
-        const classificationSpan = document.getElementById('classification');
-        const confidenceSpan = document.getElementById('confidence');
-        const timeTakenSpan = document.getElementById('time-taken');
-        const lightAgentResponse = document.getElementById('light-agent-response');
-        const heavyAgentResponse = document.getElementById('heavy-agent-response');
-        const historyTableBody = document.querySelector('#history-table tbody');
-        const spinner = document.getElementById('spinner');
-
-        submitBtn.addEventListener('click', async () => {
-            const promptText = promptInput.value.trim();
-            if (!promptText) {
-                alert('Please enter a prompt.');
-                return;
+            let panelTheme = isLight ? 'theme-light' : 'theme-heavy';
+            if (metadata.escalated) {
+                panelTheme = 'theme-heavy';
             }
 
-            spinner.style.display = 'block';
-            submitBtn.disabled = true;
-            const startTime = performance.now();
+            return `
+                <div class="xai-panel ${panelTheme}">
+                    <div class="xai-stat">
+                        <span class="xai-label">Routing Decision</span>
+                        <div>
+                            <span class="badge ${metadata.routing_decision}">[${metadata.routing_decision.toUpperCase()}]</span>
+                            ${escalatedHtml}
+                        </div>
+                    </div>
+                    <div class="xai-stat">
+                        <span class="xai-label">Active Model</span>
+                        <span class="xai-value">${metadata.agent_used}</span>
+                    </div>
+                    <div class="xai-stat">
+                        <span class="xai-label">Confidence Score</span>
+                        <span class="xai-value">${confPercent}%</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${metadata.routing_decision}" style="width: ${confPercent}%"></div>
+                        </div>
+                    </div>
+                    <div class="xai-stat">
+                        <span class="xai-label">Classification Time</span>
+                        <span class="xai-value">${metadata.classification_time ? (metadata.classification_time * 1000).toFixed(2) : 'N/A'} ms</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Add message to chat
+        function appendMessage(role, content, metadata = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+
+            const roleDiv = document.createElement('div');
+            roleDiv.className = `role ${role}-role`;
+            roleDiv.textContent = role === 'user' ? 'user@local' : 'root@meta-controller';
+
+            const textDiv = document.createElement('div');
+            textDiv.className = 'text markdown-body';
+
+            if (role === 'ai' && metadata) {
+                // Add XAI Panel before the text
+                const xaiHtml = createXaiPanel(metadata);
+                textDiv.innerHTML = xaiHtml + marked.parse(content);
+            } else {
+                textDiv.innerHTML = marked.parse(content);
+            }
+
+            contentDiv.appendChild(roleDiv);
+            contentDiv.appendChild(textDiv);
+            messageDiv.appendChild(contentDiv);
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Send message handler
+        async function sendMessage() {
+            const text = promptInput.value.trim();
+            if (!text) return;
+
+            // User message
+            appendMessage('user', text);
+            promptInput.value = '';
+            promptInput.style.height = 'auto';
+            sendBtn.disabled = true;
+
+            // Loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message ai';
+            loadingDiv.id = 'loading-message';
+            loadingDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="role ai-role">root@meta-controller</div>
+                    <div class="loader"><span></span><span></span><span></span></div>
+                </div>
+            `;
+            chatContainer.appendChild(loadingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            let endpoint = 'http://localhost:8000/chat';
+            let payloadText = text;
+
+            if (text.startsWith('/escalate-test ')) {
+                endpoint = 'http://localhost:8000/escalate-test';
+                payloadText = text.substring(15).trim();
+            } else if (text.startsWith('/escalate ')) {
+                endpoint = 'http://localhost:8000/escalate-test';
+                payloadText = text.substring(10).trim();
+            }
 
             try {
-                const response = await fetch('http://localhost:8000/classify', {
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: promptText }),
+                    body: JSON.stringify({ text: payloadText })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
 
                 const data = await response.json();
-                const endTime = performance.now();
-                const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
 
-                // Update main display
-                classificationSpan.textContent = data.label;
-                confidenceSpan.textContent = (data.confidence * 100).toFixed(2) + '%';
-                timeTakenSpan.textContent = `${timeTaken}s`;
-                classificationCard.className = 'result-card classification-card ' + data.label;
+                // Remove loading
+                document.getElementById('loading-message').remove();
 
-                // Update agent placeholders
-                if (data.label === 'light') {
-                    lightAgentResponse.textContent = `Agent processed: "${promptText}"`;
-                    lightAgentResponse.classList.remove('placeholder');
-                    heavyAgentResponse.textContent = 'Waiting for response...';
-                    heavyAgentResponse.classList.add('placeholder');
-                } else {
-                    heavyAgentResponse.textContent = `Agent processed: "${promptText}"`;
-                    heavyAgentResponse.classList.remove('placeholder');
-                    lightAgentResponse.textContent = 'Waiting for response...';
-                    lightAgentResponse.classList.add('placeholder');
-                }
-
-                // Add to history
-                const newRow = historyTableBody.insertRow(0);
-                newRow.innerHTML = `
-                    <td class="history-prompt" title="${promptText}">${promptText}</td>
-                    <td>${data.label}</td>
-                    <td>${(data.confidence * 100).toFixed(2) + '%'}</td>
-                    <td class="placeholder">Waiting...</td>
-                    <td class="placeholder">Waiting...</td>
-                `;
+                // Agent message
+                appendMessage('ai', data.response, data);
 
             } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred while classifying the prompt.');
+                document.getElementById('loading-message').remove();
+                appendMessage('ai', `Error: ${error.message}`);
             } finally {
-                spinner.style.display = 'none';
-                submitBtn.disabled = false;
+                sendBtn.disabled = false;
+                promptInput.focus();
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
             }
         });
     </script>
 </body>
+
 </html>

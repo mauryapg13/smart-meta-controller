@@ -3,68 +3,87 @@
 #    pip install -r requirements.txt
 #
 # 2. Add your API keys to the .env file:
-#    OPENAI_API_KEY=your-openai-key-here
-#    GEMINI_API_KEY=your-gemini-key-here
+#    GROQ_API_KEY=your-groq-key-here
 #
-# 3. Run the server:
-#    uvicorn main:app --reload
+# 3. Run the server (on port 8001 to avoid conflict):
+#    uvicorn main:app --reload --port 8001
 
-from fastapi import FastAPI, HTTPException
+# pyrefly: ignore [missing-import]
+from fastapi import FastAPI, HTTPException 
 from pydantic import BaseModel
-import openai
-import google.generativeai as genai
+# pyrefly: ignore [missing-import]
+from groq import Groq 
 from config import settings
-import os
 
-# Configure APIs
-if not settings.openai_api_key.startswith("your-openai-key-here"):
-    openai.api_key = settings.openai_api_key
-
-if not settings.gemini_api_key.startswith("your-gemini-key-here"):
-    genai.configure(api_key=settings.gemini_api_key)
+# Initialize Groq client
+client = None
+if settings.groq_api_key and not settings.groq_api_key.startswith("your-groq-key-here"):
+    client = Groq(api_key=settings.groq_api_key)
 
 app = FastAPI()
 
-class PromptRequest(BaseModel):
-    prompt: str
+from cryptography.fernet import Fernet
+import json
+
+# AES-128 Shared Secret (Must match backend/app.py)
+SHARED_SECRET = b'J-9cZ5WqI8pQ1t3B0xLx9TzYvV7E6cK2fA4R5nF1mOo='
+cipher = Fernet(SHARED_SECRET)
+
+class EncryptedRequest(BaseModel):
+    encrypted_data: str
 
 class LLMResponse(BaseModel):
     model: str
     response: str
 
-@app.post("/gpt5", response_model=LLMResponse)
-async def query_gpt5(request: PromptRequest):
-    if not request.prompt:
+def decrypt_prompt(encrypted_data: str) -> str:
+    try:
+        decrypted_bytes = cipher.decrypt(encrypted_data.encode('utf-8'))
+        data = json.loads(decrypted_bytes.decode('utf-8'))
+        return data["prompt"]
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid encrypted payload")
+
+@app.post("/light", response_model=LLMResponse)
+async def query_light(request: EncryptedRequest):
+    prompt = decrypt_prompt(request.encrypted_data)
+    if not prompt:
         raise HTTPException(status_code=400, detail="Prompt cannot be empty.")
-    if settings.openai_api_key.startswith("your-openai-key-here"):
-        raise HTTPException(status_code=500, detail="OpenAI API key not configured.")
+    if not client:
+        raise HTTPException(status_code=500, detail="Groq API key not configured.")
 
     try:
-        # Note: gpt-5 is not a real model name as of now. Using gpt-4 as a placeholder.
-        response = openai.chat.completions.create(
-            model="gpt-4",
-            messages=[{"role": "user", "content": request.prompt}]
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": prompt}],
         )
         return {
-            "model": "gpt-5", # as requested by the user
+            "model": "llama-3.1-8b-instant (Light Agent)",
             "response": response.choices[0].message.content
         }
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/gemini", response_model=LLMResponse)
-async def query_gemini(request: PromptRequest):
-    if not request.prompt:
+@app.post("/heavy", response_model=LLMResponse)
+async def query_heavy(request: EncryptedRequest):
+    prompt = decrypt_prompt(request.encrypted_data)
+    if not prompt:
         raise HTTPException(status_code=400, detail="Prompt cannot be empty.")
-    if settings.gemini_api_key.startswith("your-gemini-key-here"):
-        raise HTTPException(status_code=500, detail="Gemini API key not configured.")
+    if not client:
+        raise HTTPException(status_code=500, detail="Groq API key not configured.")
 
     try:
-        model = genai.GenerativeModel('gemini-1.5-pro')
-        response = model.generate_content(request.prompt)
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+        )
         return {
-            "model": "gemini-1.5-pro",
-            "response": response.text
+            "model": "llama-3.3-70b (Deep Agent)",
+            "response": response.choices[0].message.content
         }
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

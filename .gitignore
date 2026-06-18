@@ -11,3 +11,13 @@ metacontroller
 
 # Ignore log files
 server.log
+
+# Ignore environment variables / API keys
+.env
+llm_backend/.env
+__pycache__/
+*.pyc
+
+# Ignore training data and scripts
+data/
+scripts/

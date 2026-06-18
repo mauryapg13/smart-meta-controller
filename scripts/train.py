@@ -23,9 +23,12 @@ def main():
 
     # Map labels
     def map_labels(examples):
-        return {"label": [0 if label == "light" else 1 for label in examples["label"]]}
+        return {"label": [0 if str(l).strip().lower() == "light" else 1 for l in examples["label"]]}
 
     dataset = dataset.map(map_labels, batched=True)
+    # Force the feature type to be int64 so PyTorch can use it
+    from datasets import Value
+    dataset = dataset.cast_column("label", Value("int64"))
 
     # Tokenizer
     tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")

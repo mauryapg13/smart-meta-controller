@@ -4,3 +4,4 @@ python-dotenv
 pydantic-settings
 openai
 google-generativeai
+groq
