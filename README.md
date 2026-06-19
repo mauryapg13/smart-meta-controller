@@ -78,7 +78,7 @@ pip install -r backend/requirements.txt
 ### 2. Download the DistilBERT Model
 To keep the Git repository lightweight, the massive DistilBERT model weights are **not included in the repository** (they are added to `.gitignore`). You must download the weights before running the backend.
 
-1. Download the pre-trained DistilBERT weights from "sha256:b5dc31100b0d09bf9cc12f1eb57569d6318b7fce7ae1ab3aa8b2a2982a74abc2".
+1. Download the pre-trained DistilBERT weights from [sha256:b5dc31100b0d09bf9cc12f1eb57569d6318b7fce7ae1ab3aa8b2a2982a74abc2](https://github.com/mauryapg13/smart-meta-controller/releases/download/v1.0.0/distilbert-prompt-classifier.zip).
 2. Extract the downloaded folder and place it in the project root so that the path looks exactly like this: `models/distilbert-prompt-classifier/`.
 
 ### 3. Configure Your API Keys
